@@ -1,0 +1,57 @@
+managed; //implementation in class zbp_cd_i_r_orden_7143 unique; //Una sola clase de comportamiento para todas las entidades
+//strict ( 2 );
+
+define behavior for ZCD_I_R_ORDEN_7143 alias Order
+implementation in class zcl_bp_Order_7143 unique    //Una clase para cada entidad
+persistent table zorden_7143
+with additional save
+lock master                       //Bloqueo a nivel ROOT
+authorization master ( instance ) //Autorizacion a nivel ROOT
+etag master deliverydate          //Control de acceso simultaneo a nivel de BD
+{
+  create;
+  update;
+  delete;
+
+  // Administrative Fields
+  field ( readonly ) createon;              //Campos definido solo lectura
+  field ( mandatory : create ) Id, Email;   //Campos definido obligatorio
+  // Administrative Dynamic Fields
+  field ( features : instance ) Id;         //Campos definido con control de acceso dinamico
+
+//Maping
+  mapping for zorden_7143 corresponding; //En este caso se mapea asi, porque los nombres son iguales
+
+  //field ( features : instance ) Id;
+  association _Items { create; }
+
+//Validaciones
+  validation validateStatus on save { field orderstatus; }
+
+//Actions a nivel de instancia
+  action ( features : instance ) acceptOrder result [1] $self;
+  action ( features : instance ) refuseOrder result [1] $self;
+//Actions a nivel
+  action createOrder result [1] $self;
+}
+
+define behavior for ZCD_I_V_ITEMS_7143 alias Items
+implementation in class zcl_bp_Items_7143 unique  //Una clase para cada entidad
+persistent table zitems_7143
+lock dependent by _Orden            //Bloqueo enlazado con la Association ORDEN en ROOT
+authorization dependent by _Orden   //Autorizacion  enlazado con la Association ORDEN en ROOT
+etag master releasedate             //Control de acceso simultaneo a nivel de BD
+{
+  update;
+  delete;
+
+  // Administrative Fields
+  field ( readonly ) Id;
+  field ( readonly : update ) Id_item;
+  field ( mandatory : create ) Id_item;
+
+//Maping
+  mapping for zitems_7143 corresponding; //En este caso se mapea asi, porque los nombres son iguales
+
+  association _Orden;
+}
